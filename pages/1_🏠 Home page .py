@@ -5,7 +5,7 @@ from dataloader import data_loader
 
 st.title("🏠 Home")
 
-df = load_data()
+df = data_loader()
 
 st.subheader("Dashboard Summary")
 
