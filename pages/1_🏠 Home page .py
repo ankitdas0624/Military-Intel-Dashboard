@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
-from utils.data_loader import load_data
+from dataloader import data_loader
+
 
 st.title("🏠 Home")
 
