@@ -27,7 +27,7 @@ Global Terrorism Database (GTD).
 def load_data():
 
     df = pd.read_csv(
-        "data/globalterrorism.csv",
+        "dataloader/globalterrorismdb_0718dist.csv",
         encoding="latin1",
         low_memory=False
     )
