@@ -1,6 +1,6 @@
 import streamlit as st
 import plotly.express as px
-from utils.data_loader import load_data
+from utils.data_loader import data_loader.py
 
 st.set_page_config(
     page_title="Country Analysis",
@@ -9,6 +9,8 @@ st.set_page_config(
 )
 
 st.title("🌎 Country Analysis")
+
+
 
 df = load_data()
 
