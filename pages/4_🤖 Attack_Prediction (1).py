@@ -67,13 +67,13 @@ with st.form("prediction_form"):
 
         success = st.selectbox(
             "✅ Attack Successful?",
-,
+
             format_func=lambda x: "Yes" if x == 1 else "No"
         )
 
         suicide = st.selectbox(
             "💣 Suicide Attack?",
-,
+
             format_func=lambda x: "Yes" if x == 1 else "No"
         )
 
