@@ -20,20 +20,25 @@ Global Terrorism Database (GTD).
 """)
 
 # -------------------------------------------------
-# Load Dataset
+# Load Dataset (HIGHLY OPTIMIZED FOR RAM SAVINGS)
 # -------------------------------------------------
 
 @st.cache_data
 def load_data():
-
+    # Streamlit Cloud gives you a 1GB RAM limit.
+    # Specifying usecols loads only the columns needed, saving ~90% of your memory budget!
+    required_columns = [
+        "iyear", "nkill", "nwound", "country_txt", 
+        "gname", "attacktype1_txt", "weaptype1_txt"
+    ]
+    
     df = pd.read_csv(
         "dataloader/globalterrorismdb_0718dist.csv",
         encoding="latin1",
+        usecols=required_columns,
         low_memory=False
     )
-
     return df
-
 
 df = load_data()
 
@@ -52,6 +57,11 @@ selected_year = st.sidebar.selectbox(
 
 if selected_year != "All":
     df = df[df["iyear"] == selected_year]
+
+# Guard rails: Check if data is empty after filtering to prevent execution failures
+if df.empty:
+    st.warning("⚠️ No data available for the selected filters.")
+    st.stop()
 
 # -------------------------------------------------
 # Key Statistics
@@ -154,28 +164,26 @@ col4.metric(
 
 st.subheader("Executive Summary")
 
+# Safeguard array index evaluations in case lookup sequences are completely empty
+top_country_str = top_countries.index[0] if not top_countries.empty else "N/A"
+top_group_str = top_groups.index[0] if not top_groups.empty else "N/A"
+top_attack_str = attack_types.index[0] if not attack_types.empty else "N/A"
+top_weapon_str = weapon_types.index[0] if not weapon_types.empty else "N/A"
+
 summary = f"""
+During the selected period, {total_incidents:,} terrorist incidents were recorded across {countries} countries.
 
-During the selected period, {total_incidents:,} terrorist incidents
-were recorded across {countries} countries.
-
-The attacks resulted in {total_killed:,} fatalities and
-{total_wounded:,} injuries.
+The attacks resulted in {total_killed:,} fatalities and {total_wounded:,} injuries.
 
 The overall threat level is assessed as {threat}.
 
-The most affected country is
-{top_countries.index[0]}.
+The most affected country is {top_country_str}.
 
-The most active terrorist organization is
-{top_groups.index[0]}.
+The most active terrorist organization is {top_group_str}.
 
-The most common attack type is
-{attack_types.index[0]}.
+The most common attack type is {top_attack_str}.
 
-The most frequently used weapon is
-{weapon_types.index[0]}.
-
+The most frequently used weapon is {top_weapon_str}.
 """
 
 st.info(summary)
@@ -192,12 +200,13 @@ fig = px.bar(
     y=top_countries.index,
     orientation="h",
     labels={
-        "x":"Incidents",
-        "y":"Country"
+        "x": "Incidents",
+        "y": "Country"
     }
 )
 
-st.plotly_chart(fig, use_container_width=True)
+# FIXED: Replaced use_container_width=True with width="stretch" to eliminate log overflows
+st.plotly_chart(fig, width="stretch")
 
 # -------------------------------------------------
 # Terrorist Groups
@@ -211,12 +220,13 @@ fig2 = px.bar(
     y=top_groups.index,
     orientation="h",
     labels={
-        "x":"Attacks",
-        "y":"Group"
+        "x": "Attacks",
+        "y": "Group"
     }
 )
 
-st.plotly_chart(fig2, use_container_width=True)
+# FIXED: Replaced use_container_width=True with width="stretch" to eliminate log overflows
+st.plotly_chart(fig2, width="stretch")
 
 # -------------------------------------------------
 # AI Intelligence Assessment
@@ -225,22 +235,17 @@ st.plotly_chart(fig2, use_container_width=True)
 st.subheader("AI Intelligence Assessment")
 
 recommendation = f"""
+1. Increase surveillance in {top_country_str}.
 
-1. Increase surveillance in {top_countries.index[0]}.
+2. Closely monitor activities associated with {top_group_str}.
 
-2. Closely monitor activities associated with
-{top_groups.index[0]}.
-
-3. Strengthen protection of infrastructure that
-is frequently targeted.
+3. Strengthen protection of infrastructure that is frequently targeted.
 
 4. Enhance intelligence sharing among agencies.
 
 5. Increase monitoring of explosive-based attacks.
 
-6. Continue trend analysis using predictive
-machine learning models.
-
+6. Continue trend analysis using predictive machine learning models.
 """
 
 st.success(recommendation)
@@ -250,35 +255,21 @@ st.success(recommendation)
 # -------------------------------------------------
 
 report = f"""
-
 ==============================
-
 AI INTELLIGENCE REPORT
-
 ==============================
 
 Total Incidents : {total_incidents}
-
 Fatalities : {total_killed}
-
 Injuries : {total_wounded}
-
 Threat Level : {threat}
-
-Top Country : {top_countries.index[0]}
-
-Top Group : {top_groups.index[0]}
-
-Most Common Attack :
-{attack_types.index[0]}
-
-Most Common Weapon :
-{weapon_types.index[0]}
+Top Country : {top_country_str}
+Top Group : {top_group_str}
+Most Common Attack : {top_attack_str}
+Most Common Weapon : {top_weapon_str}
 
 Recommendations
-
 {recommendation}
-
 """
 
 st.download_button(

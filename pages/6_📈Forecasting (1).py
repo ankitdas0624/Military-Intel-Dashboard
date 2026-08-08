@@ -21,13 +21,24 @@ Forecast the future number of terrorist attacks using historical GTD data.
 """)
 
 # ----------------------------------------------------
-# Load Dataset
+# Load Dataset (OPTIMIZED & EXPANDED TO 7 SAFE COLUMNS)
 # ----------------------------------------------------
 @st.cache_data
 def load_data():
+    # Unified 7-column setup across all dashboard views to protect server RAM
+    required_cols = [
+        "country_txt", 
+        "iyear", 
+        "nkill", 
+        "nwound", 
+        "gname", 
+        "attacktype1_txt", 
+        "weaptype1_txt"
+    ]
     df = pd.read_csv(
         "dataloader/globalterrorismdb_0718dist.csv",
         encoding="latin1",
+        usecols=required_cols,
         low_memory=False
     )
     return df
@@ -71,7 +82,7 @@ yearly = yearly.sort_values("iyear")
 # Check data availability
 # ----------------------------------------------------
 if len(yearly) < 5:
-    st.warning("Not enough historical data for forecasting.")
+    st.warning("⚠️ Not enough historical data for forecasting.")
     st.stop()
 
 # ----------------------------------------------------
@@ -86,7 +97,7 @@ model.fit(X, y)
 # ----------------------------------------------------
 # Future Prediction
 # ----------------------------------------------------
-last_year = yearly["iyear"].max()
+last_year = int(yearly["iyear"].max())
 
 future_years = np.arange(
     last_year + 1,
@@ -136,7 +147,8 @@ fig.update_layout(
     height=600
 )
 
-st.plotly_chart(fig, use_container_width=True)
+# FIXED: Modern layout configuration parameters
+st.plotly_chart(fig, width="stretch")
 
 # ----------------------------------------------------
 # Forecast Table
@@ -151,13 +163,13 @@ st.dataframe(
 # ----------------------------------------------------
 # Growth Analysis
 # ----------------------------------------------------
-historical_last = yearly.iloc[-1]["Attacks"]
-forecast_last = forecast.iloc[-1]["Forecasted Attacks"]
+historical_last = float(yearly.iloc[-1]["Attacks"])
+forecast_last = float(forecast.iloc[-1]["Forecasted Attacks"])
 
 growth = (
     (forecast_last - historical_last)
-    / max(historical_last, 1)
-) * 100
+    / max(historical_last, 1.0)
+) * 100.0
 
 st.subheader("Growth Analysis")
 
