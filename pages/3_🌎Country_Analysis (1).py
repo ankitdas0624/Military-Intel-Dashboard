@@ -10,8 +10,6 @@ st.set_page_config(
 
 st.title("🌎 Country Analysis")
 
-
-
 df = load_data()
 
 # -----------------------------
@@ -80,9 +78,10 @@ with left:
         title="Attacks Over Years"
     )
 
+    # Valid string parameters for st.plotly_chart layout
     st.plotly_chart(
         fig,
-        use_container_width=True
+        width="stretch"
     )
 
 with right:
@@ -103,7 +102,7 @@ with right:
 
     st.plotly_chart(
         fig,
-        use_container_width=True
+        width="stretch"
     )
 
 st.divider()
@@ -135,7 +134,7 @@ with left:
 
     st.plotly_chart(
         fig,
-        use_container_width=True
+        width="stretch"
     )
 
 with right:
@@ -157,7 +156,7 @@ with right:
 
     st.plotly_chart(
         fig,
-        use_container_width=True
+        width="stretch"
     )
 
 st.divider()
@@ -171,9 +170,6 @@ st.subheader("Incident Locations")
 map_df = country_df.dropna(
     subset=["latitude", "longitude"]
 )
-
-
-
 
 fig = px.scatter_geo(
     map_df,
@@ -199,7 +195,7 @@ fig.update_layout(
     margin=dict(l=0, r=0, t=50, b=0)
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width="stretch")
 
 st.divider()
 
@@ -220,6 +216,7 @@ cols = [
     "nwound"
 ]
 
+# FIXED: Changed configuration key to native use_container_width=True for dataframe
 st.dataframe(
     country_df[cols],
     use_container_width=True
