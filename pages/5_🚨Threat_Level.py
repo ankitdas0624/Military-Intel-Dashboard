@@ -7,13 +7,19 @@ st.set_page_config(page_title="Threat Level Prediction", page_icon="🚨", layou
 st.title("🚨 AI Threat Level Prediction System")
 
 # ---------------------------------------------------
-# 1. DATA LOADING
+# 1. OPTIMIZED DATA LOADING (Prevents Cloud Memory Crashes)
 # ---------------------------------------------------
 @st.cache_data
 def load_cached_data():
+    # Only load columns actively used in layout, metrics, and filters to save server RAM
+    required_cols = [
+        "country_txt", "region_txt", "attacktype1_txt", 
+        "weaptype1_txt", "targtype1_txt", "nkill"
+    ]
     df = pd.read_csv(
         "dataloader/globalterrorismdb_0718dist.csv",
         encoding="latin1",
+        usecols=required_cols,
         low_memory=False
     )
     return df
@@ -32,7 +38,8 @@ if os.path.exists(encoders_path) and os.path.exists(target_encoder_path):
     
     countries = list(encoders["country_txt"].classes_)
     regions = list(encoders["region_txt"].classes_)
-    attacks = list(target_encoder.classes_)  # Fix: Get attack types from target_encoder
+    # Extract attack types from feature encoders safely
+    attacks = list(encoders["attacktype1_txt"].classes_) if "attacktype1_txt" in encoders else sorted(df["attacktype1_txt"].dropna().unique())
     weapons = list(encoders["weaptype1_txt"].classes_)
     targets = list(encoders["targtype1_txt"].classes_)
 else:
@@ -57,11 +64,20 @@ selected_target = st.sidebar.selectbox("Target Type", targets)
 # 4. TRANSLATION: Feature Encoders
 # ---------------------------------------------------
 if os.path.exists(encoders_path) and os.path.exists(target_encoder_path):
-    encoded_country = encoders["country_txt"].transform([selected_country])[0]
-    encoded_region = encoders["region_txt"].transform([selected_region])[0]
-    encoded_attack = target_encoder.transform([selected_attack])[0]  # Fix: Transform using target_encoder
-    encoded_weapon = encoders["weaptype1_txt"].transform([selected_weapon])[0]
-    encoded_target = encoders["targtype1_txt"].transform([selected_target])[0]
+    try:
+        encoded_country = encoders["country_txt"].transform([selected_country])[0]
+        encoded_region = encoders["region_txt"].transform([selected_region])[0]
+        
+        if "attacktype1_txt" in encoders:
+            encoded_attack = encoders["attacktype1_txt"].transform([selected_attack])[0]
+        else:
+            encoded_attack = 0
+            
+        encoded_weapon = encoders["weaptype1_txt"].transform([selected_weapon])[0]
+        encoded_target = encoders["targtype1_txt"].transform([selected_target])[0]
+    except ValueError:
+        # Fallback values if features mismatch tracking tracking arrays
+        encoded_country, encoded_region, encoded_attack, encoded_weapon, encoded_target = 0, 0, 0, 0, 0
 else:
     encoded_country, encoded_region, encoded_attack, encoded_weapon, encoded_target = 0, 0, 0, 0, 0
 
@@ -79,7 +95,8 @@ st.divider()
 # ---------------------------------------------------
 # 5. PREDICTION & THREAT ASSESSMENT LOGIC
 # ---------------------------------------------------
-if st.button("🚨 Predict Threat Level"):
+# MODERNIZED: Updated parameter use_container_width=True to width="stretch"
+if st.button("🚨 Predict Threat Level", width="stretch"):
     filtered = df[
         (df["country_txt"] == selected_country) & 
         (df["attacktype1_txt"] == selected_attack)
