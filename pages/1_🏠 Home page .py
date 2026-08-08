@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.express as px
+import pandas as pd  # Moved import here for cleaner structure
 from theme_manager import apply_global_theme
 
 # ----------------------------------------------------
@@ -17,20 +18,12 @@ apply_global_theme()
 st.title("🏠 Home")
 
 # ----------------------------------------------------
-# 2. Optimized Data Loading Architecture
+# 2. Optimized Data Loading Architecture (Parquet Updated)
 # ----------------------------------------------------
 @st.cache_data
 def load_optimized_home_data():
-    # Only load columns actively used for home metrics and line plots to prevent 1GB RAM exhaustion crashes
-    required_cols = ["iyear", "nkill", "nwound", "country_txt"]
-    import pandas as pd
-    df = pd.read_csv(
-        "dataloader/globalterrorismdb_0718dist.csv",
-        encoding="latin1",
-        usecols=required_cols,
-        low_memory=False
-    )
-    return df
+    # Read the ultra-lightweight parquet file instantly from memory
+    return pd.read_parquet("dataloader/globalterrorismdb_small.parquet")
 
 df = load_optimized_home_data()
 
@@ -66,8 +59,8 @@ fig = px.line(
     markers=True
 )
 
-# FIXED: Modern layout configuration parameters
-st.plotly_chart(fig, width="stretch")
+# FIXED: Replaced invalid width="stretch" with native container width scaling
+st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
 

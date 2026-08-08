@@ -2,33 +2,17 @@ import streamlit as st
 import pandas as pd
 import joblib
 import os
+from theme_manager import apply_global_theme
 
 st.set_page_config(page_title="Threat Level Prediction", page_icon="🚨", layout="wide")
 st.title("🚨 AI Threat Level Prediction System")
 
-# ---------------------------------------------------
-# 1. OPTIMIZED DATA LOADING (Prevents Cloud Memory Crashes)
-# ---------------------------------------------------
 @st.cache_data
 def load_cached_data():
-    # Only load columns actively used in layout, metrics, and filters to save server RAM
-    required_cols = [
-        "country_txt", "region_txt", "attacktype1_txt", 
-        "weaptype1_txt", "targtype1_txt", "nkill"
-    ]
-    df = pd.read_csv(
-        "dataloader/globalterrorismdb_0718dist.csv",
-        encoding="latin1",
-        usecols=required_cols,
-        low_memory=False
-    )
-    return df
+    return pd.read_parquet("dataloader/globalterrorismdb_small.parquet")
 
 df = load_cached_data()
 
-# ---------------------------------------------------
-# 2. LOAD ENCODERS & PARAMETERS
-# ---------------------------------------------------
 encoders_path = "models/feature_encoders.pkl"
 target_encoder_path = "models/target_encoder.pkl"
 
@@ -38,7 +22,6 @@ if os.path.exists(encoders_path) and os.path.exists(target_encoder_path):
     
     countries = list(encoders["country_txt"].classes_)
     regions = list(encoders["region_txt"].classes_)
-    # Extract attack types from feature encoders safely
     attacks = list(encoders["attacktype1_txt"].classes_) if "attacktype1_txt" in encoders else sorted(df["attacktype1_txt"].dropna().unique())
     weapons = list(encoders["weaptype1_txt"].classes_)
     targets = list(encoders["targtype1_txt"].classes_)
@@ -49,9 +32,6 @@ else:
     weapons = sorted(df["weaptype1_txt"].dropna().unique())
     targets = sorted(df["targtype1_txt"].dropna().unique())
 
-# ---------------------------------------------------
-# 3. SIDEBAR: Input Parameters
-# ---------------------------------------------------
 st.sidebar.header("Input Parameters")
 
 selected_country = st.sidebar.selectbox("Country", countries)
@@ -60,9 +40,6 @@ selected_attack = st.sidebar.selectbox("Attack Type", attacks)
 selected_weapon = st.sidebar.selectbox("Weapon Type", weapons)
 selected_target = st.sidebar.selectbox("Target Type", targets)
 
-# ---------------------------------------------------
-# 4. TRANSLATION: Feature Encoders
-# ---------------------------------------------------
 if os.path.exists(encoders_path) and os.path.exists(target_encoder_path):
     try:
         encoded_country = encoders["country_txt"].transform([selected_country])[0]
@@ -76,12 +53,10 @@ if os.path.exists(encoders_path) and os.path.exists(target_encoder_path):
         encoded_weapon = encoders["weaptype1_txt"].transform([selected_weapon])[0]
         encoded_target = encoders["targtype1_txt"].transform([selected_target])[0]
     except ValueError:
-        # Fallback values if features mismatch tracking tracking arrays
         encoded_country, encoded_region, encoded_attack, encoded_weapon, encoded_target = 0, 0, 0, 0, 0
 else:
     encoded_country, encoded_region, encoded_attack, encoded_weapon, encoded_target = 0, 0, 0, 0, 0
 
-# Display visual reference codes
 st.write("### Reference Mapping Codes (Sent to Model)")
 col1, col2, col3, col4, col5 = st.columns(5)
 col1.metric(selected_country, f"Code: {encoded_country}")
@@ -92,10 +67,6 @@ col5.metric(selected_target, f"Code: {encoded_target}")
 
 st.divider()
 
-# ---------------------------------------------------
-# 5. PREDICTION & THREAT ASSESSMENT LOGIC
-# ---------------------------------------------------
-# MODERNIZED: Updated parameter use_container_width=True to width="stretch"
 if st.button("🚨 Predict Threat Level", width="stretch"):
     filtered = df[
         (df["country_txt"] == selected_country) & 

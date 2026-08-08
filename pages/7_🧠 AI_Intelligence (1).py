@@ -1,16 +1,16 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-
-# -------------------------------------------------
-# Page Configuration
-# -------------------------------------------------
+from theme_manager import apply_global_theme
+from dataloader.data_loader import load_data
 
 st.set_page_config(
     page_title="AI Intelligence Report",
     page_icon="🧠",
     layout="wide"
 )
+
+apply_global_theme()
 
 st.title("🧠 AI Intelligence Report")
 
@@ -19,32 +19,7 @@ Generate an AI-assisted intelligence summary from the
 Global Terrorism Database (GTD).
 """)
 
-# -------------------------------------------------
-# Load Dataset (HIGHLY OPTIMIZED FOR RAM SAVINGS)
-# -------------------------------------------------
-
-@st.cache_data
-def load_data():
-    # Streamlit Cloud gives you a 1GB RAM limit.
-    # Specifying usecols loads only the columns needed, saving ~90% of your memory budget!
-    required_columns = [
-        "iyear", "nkill", "nwound", "country_txt", 
-        "gname", "attacktype1_txt", "weaptype1_txt"
-    ]
-    
-    df = pd.read_csv(
-        "dataloader/globalterrorismdb_0718dist.csv",
-        encoding="latin1",
-        usecols=required_columns,
-        low_memory=False
-    )
-    return df
-
 df = load_data()
-
-# -------------------------------------------------
-# Sidebar Filters
-# -------------------------------------------------
 
 st.sidebar.header("Report Filters")
 
@@ -58,28 +33,15 @@ selected_year = st.sidebar.selectbox(
 if selected_year != "All":
     df = df[df["iyear"] == selected_year]
 
-# Guard rails: Check if data is empty after filtering to prevent execution failures
 if df.empty:
     st.warning("⚠️ No data available for the selected filters.")
     st.stop()
 
-# -------------------------------------------------
-# Key Statistics
-# -------------------------------------------------
-
 total_incidents = len(df)
-
 total_killed = int(df["nkill"].fillna(0).sum())
-
 total_wounded = int(df["nwound"].fillna(0).sum())
-
 countries = df["country_txt"].nunique()
-
 groups = df["gname"].nunique()
-
-# -------------------------------------------------
-# Top Countries
-# -------------------------------------------------
 
 top_countries = (
     df["country_txt"]
@@ -87,52 +49,30 @@ top_countries = (
     .head(10)
 )
 
-# -------------------------------------------------
-# Top Terrorist Groups
-# -------------------------------------------------
-
 top_groups = (
     df["gname"]
     .value_counts()
     .head(10)
 )
 
-# -------------------------------------------------
-# Attack Types
-# -------------------------------------------------
-
 attack_types = (
     df["attacktype1_txt"]
     .value_counts()
 )
-
-# -------------------------------------------------
-# Weapon Types
-# -------------------------------------------------
 
 weapon_types = (
     df["weaptype1_txt"]
     .value_counts()
 )
 
-# -------------------------------------------------
-# Threat Level
-# -------------------------------------------------
-
 avg_killed = df["nkill"].fillna(0).mean()
 
 if avg_killed < 2:
     threat = "LOW 🟢"
-
 elif avg_killed < 5:
     threat = "MEDIUM 🟡"
-
 else:
     threat = "HIGH 🔴"
-
-# -------------------------------------------------
-# Dashboard Metrics
-# -------------------------------------------------
 
 st.subheader("Key Intelligence Indicators")
 
@@ -158,13 +98,8 @@ col4.metric(
     threat
 )
 
-# -------------------------------------------------
-# Executive Summary
-# -------------------------------------------------
-
 st.subheader("Executive Summary")
 
-# Safeguard array index evaluations in case lookup sequences are completely empty
 top_country_str = top_countries.index[0] if not top_countries.empty else "N/A"
 top_group_str = top_groups.index[0] if not top_groups.empty else "N/A"
 top_attack_str = attack_types.index[0] if not attack_types.empty else "N/A"
@@ -188,10 +123,6 @@ The most frequently used weapon is {top_weapon_str}.
 
 st.info(summary)
 
-# -------------------------------------------------
-# Top Countries
-# -------------------------------------------------
-
 st.subheader("Top 10 High-Risk Countries")
 
 fig = px.bar(
@@ -205,12 +136,7 @@ fig = px.bar(
     }
 )
 
-# FIXED: Replaced use_container_width=True with width="stretch" to eliminate log overflows
-st.plotly_chart(fig, width="stretch")
-
-# -------------------------------------------------
-# Terrorist Groups
-# -------------------------------------------------
+st.plotly_chart(fig, use_container_width=True)
 
 st.subheader("Most Active Terrorist Groups")
 
@@ -225,12 +151,7 @@ fig2 = px.bar(
     }
 )
 
-# FIXED: Replaced use_container_width=True with width="stretch" to eliminate log overflows
-st.plotly_chart(fig2, width="stretch")
-
-# -------------------------------------------------
-# AI Intelligence Assessment
-# -------------------------------------------------
+st.plotly_chart(fig2, use_container_width=True)
 
 st.subheader("AI Intelligence Assessment")
 
@@ -249,10 +170,6 @@ recommendation = f"""
 """
 
 st.success(recommendation)
-
-# -------------------------------------------------
-# Download Report
-# -------------------------------------------------
 
 report = f"""
 ==============================

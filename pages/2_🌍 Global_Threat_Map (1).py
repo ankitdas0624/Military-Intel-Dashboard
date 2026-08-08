@@ -1,3 +1,6 @@
+from theme_manager import apply_global_theme
+apply_global_theme()
+
 import streamlit as st
 import plotly.express as px
 from utils.data_loader import load_data
@@ -15,6 +18,9 @@ year = st.sidebar.selectbox(
 
 if year != "All":
     df = df[df["iyear"] == year]
+else:
+    if len(df) > 20000:
+        df = df.sample(20000, random_state=42)
 
 df = df.dropna(subset=["latitude", "longitude"])
 

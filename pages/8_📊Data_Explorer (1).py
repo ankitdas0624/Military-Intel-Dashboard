@@ -1,23 +1,20 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from theme_manager import apply_global_theme
+from dataloader.data_loader import load_data
 
-# --------------------------------------------------------
-# Page Configuration
-# --------------------------------------------------------
 st.set_page_config(
     page_title="Data Explorer",
     page_icon="📊",
     layout="wide"
 )
 
+apply_global_theme()
+
 st.title("📊 Global Terrorism Data Explorer")
 st.markdown("Explore, filter, visualize, and extract records from the optimized GTD schema.")
 
-# --------------------------------------------------------
-# STYLED PUBLIC DATASET DISCLAIMER CAPTION
-# --------------------------------------------------------
-# This adds a distinct, high-visibility notification bar at the top of the app interface
 st.markdown(
     """
     <div style="
@@ -37,30 +34,10 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --------------------------------------------------------
-# Load Dataset (HIGHLY OPTIMIZED 10-COLUMN FOOTPRINT)
-# --------------------------------------------------------
-@st.cache_data
-def load_data():
-    required_cols = [
-        "iyear", "country_txt", "region_txt", "attacktype1_txt", 
-        "weaptype1_txt", "gname", "city", "nkill", "nwound", "summary"
-    ]
-    df = pd.read_csv(
-        "dataloader/globalterrorismdb_0718dist.csv",
-        encoding="latin1",
-        usecols=required_cols,
-        low_memory=False
-    )
-    df["city"] = df["city"].fillna("Unknown")
-    df["summary"] = df["summary"].fillna("No summary provided.")
-    return df
-
 df = load_data()
+df["city"] = df["city"].fillna("Unknown")
+df["summary"] = df["summary"].fillna("No summary provided.")
 
-# --------------------------------------------------------
-# Sidebar Filters
-# --------------------------------------------------------
 st.sidebar.header("Filter Dataset")
 
 years = sorted(df["iyear"].dropna().unique())
@@ -84,9 +61,6 @@ selected_weapon = st.sidebar.multiselect("Weapon Type", weapons)
 groups = sorted(df["gname"].dropna().unique())
 selected_group = st.sidebar.multiselect("Terrorist Group", groups)
 
-# --------------------------------------------------------
-# Apply Filters
-# --------------------------------------------------------
 filtered_df = df.copy()
 
 if selected_year:
@@ -102,9 +76,6 @@ if selected_weapon:
 if selected_group:
     filtered_df = filtered_df[filtered_df["gname"].isin(selected_group)]
 
-# --------------------------------------------------------
-# Search Box
-# --------------------------------------------------------
 search = st.text_input("🔍 Search Descriptions by City, Country, or Summary Details")
 if search:
     search_lower = search.lower()
@@ -118,9 +89,6 @@ if filtered_df.empty:
     st.error("⚠️ No entries match the current filter selection. Broaden your filters in the sidebar.")
     st.stop()
 
-# --------------------------------------------------------
-# KPIs
-# --------------------------------------------------------
 st.write("### Key Performance Indicators")
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Total Incidents", f"{len(filtered_df):,}")
@@ -130,9 +98,6 @@ c4.metric("Injuries Recorded", f"{int(filtered_df['nwound'].fillna(0).sum()):,}"
 
 st.divider()
 
-# --------------------------------------------------------
-# Multi-Tab Layout Presentation
-# --------------------------------------------------------
 main_tab1, main_tab2, main_tab3 = st.tabs(["📋 Data Records Preview", "📈 Visual Analytics Dashboard", "⚙️ Data Integrity & Info"])
 
 with main_tab1:
@@ -140,7 +105,7 @@ with main_tab1:
     
     st.dataframe(
         filtered_df.head(100),
-        width="stretch",
+        use_container_width=True,
         height=400
     )
     
@@ -166,7 +131,7 @@ with main_tab2:
             color_continuous_scale=px.colors.sequential.YlOrRd,
             title="Top 10 High-Risk Nations Overview"
         )
-        st.plotly_chart(fig, width="stretch")
+        st.plotly_chart(fig, use_container_width=True)
         
     with chart_tab2:
         attack_chart = filtered_df["attacktype1_txt"].value_counts().reset_index()
@@ -177,7 +142,7 @@ with main_tab2:
             color_discrete_sequence=px.colors.sequential.Reds_r,
             title="Operational Tactics Profile Distribution"
         )
-        st.plotly_chart(fig2, width="stretch")
+        st.plotly_chart(fig2, use_container_width=True)
         
     with chart_tab3:
         weapon_chart = filtered_df["weaptype1_txt"].value_counts().head(10).reset_index()
@@ -188,7 +153,7 @@ with main_tab2:
             color_continuous_scale=px.colors.sequential.Oranges,
             title="Weapon Category Volume Trace"
         )
-        st.plotly_chart(fig3, width="stretch")
+        st.plotly_chart(fig3, use_container_width=True)
 
 with main_tab3:
     col_info_left, col_info_right = st.columns(2)
@@ -198,7 +163,7 @@ with main_tab3:
         missing = filtered_df.isnull().sum().sort_values(ascending=False).reset_index()
         missing.columns = ["Data Attribute Feature", "Missing Cell Metrics"]
         
-        st.dataframe(missing, width="stretch")
+        st.dataframe(missing, use_container_width=True)
         
     with col_info_right:
         st.subheader("System Metadata Summary")

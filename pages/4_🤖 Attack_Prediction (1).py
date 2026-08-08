@@ -1,17 +1,12 @@
 import streamlit as st
 import joblib
 import pandas as pd
+from theme_manager import apply_global_theme
+from dataloader.data_loader import load_data
 
-model = joblib.load(
-    "models/attack_prediction_model.pkl"
-)
-encoders = joblib.load(
-    "models/feature_encoders.pkl"
-)
-target_encoder = joblib.load(
-    "models/target_encoder.pkl"
-)
-
+model = joblib.load("models/attack_prediction_model.pkl")
+encoders = joblib.load("models/feature_encoders.pkl")
+target_encoder = joblib.load("models/target_encoder.pkl")
 
 st.set_page_config(
     page_title="Attack Prediction",
@@ -19,25 +14,15 @@ st.set_page_config(
     layout="wide"
 )
 
+apply_global_theme()
+
 st.title("🤖 Attack Type Prediction")
 
 st.markdown("""
 Enter the incident details below and click **Predict Attack Type**.
 """)
 
-# -------------------------
-# Load Dataset
-# -------------------------
-
-df = pd.read_csv(
-    "dataloader/globalterrorismdb_0718dist.csv",
-    encoding="latin1",
-    low_memory=False
-)
-
-# -------------------------
-# Remove Missing Values
-# -------------------------
+df = load_data()
 
 df = df.dropna(subset=[
     "country_txt",
@@ -46,10 +31,6 @@ df = df.dropna(subset=[
     "targtype1_txt",
     "gname"
 ])
-
-# -------------------------
-# Create Input Form
-# -------------------------
 
 with st.form("prediction_form"):
 
@@ -86,13 +67,13 @@ with st.form("prediction_form"):
 
         success = st.selectbox(
             "✅ Attack Successful?",
-            [0, 1],
+,
             format_func=lambda x: "Yes" if x == 1 else "No"
         )
 
         suicide = st.selectbox(
             "💣 Suicide Attack?",
-            [0, 1],
+,
             format_func=lambda x: "Yes" if x == 1 else "No"
         )
 
@@ -111,34 +92,34 @@ with st.form("prediction_form"):
         )
 
     submitted = st.form_submit_button("🚀 Predict Attack Type")
-    if submitted:
-        st.success("Prediction request received.")
 
-country = encoders["country_txt"].transform([country])[0]
-region = encoders["region_txt"].transform([region])[0]
-weapon = encoders["weaptype1_txt"].transform([weapon])[0]
-target = encoders["targtype1_txt"].transform([target])[0]
-group = encoders["gname"].transform([group])[0]
+if submitted:
+    country_enc = encoders["country_txt"].transform([country])[0]
+    region_enc = encoders["region_txt"].transform([region])[0]
+    weapon_enc = encoders["weaptype1_txt"].transform([weapon])[0]
+    target_enc = encoders["targtype1_txt"].transform([target])[0]
+    group_enc = encoders["gname"].transform([group])[0]
 
-input_df = pd.DataFrame({
-    "country_txt": [country],
-    "region_txt": [region],
-    "weaptype1_txt": [weapon],
-    "targtype1_txt": [target],
-    "gname": [group],
-    "success": [success],
-    "suicide": [suicide],
-    "nkill": [nkill],
-    "nwound": [nwound]
-})
-prediction = model.predict(input_df)
-attack_type = target_encoder.inverse_transform(prediction)[0]
-st.success(f"Predicted Attack Type: {attack_type}")
-probabilities = model.predict_proba(input_df)
-confidence = probabilities.max() * 100
+    input_df = pd.DataFrame({
+        "country_txt": [country_enc],
+        "region_txt": [region_enc],
+        "weaptype1_txt": [weapon_enc],
+        "targtype1_txt": [target_enc],
+        "gname": [group_enc],
+        "success": [success],
+        "suicide": [suicide],
+        "nkill": [nkill],
+        "nwound": [nwound]
+    })
+    
+    prediction = model.predict(input_df)
+    attack_type = target_encoder.inverse_transform(prediction)[0]
+    st.success(f"Predicted Attack Type: {attack_type}")
+    
+    probabilities = model.predict_proba(input_df)
+    confidence = probabilities.max() * 100
 
-st.metric(
-    "Prediction Confidence",
-    f"{confidence:.2f}%"
-)
-
+    st.metric(
+        "Prediction Confidence",
+        f"{confidence:.2f}%"
+    )

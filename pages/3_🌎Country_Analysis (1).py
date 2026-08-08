@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.express as px
 from dataloader.data_loader import load_data
+from theme_manager import apply_global_theme
 
 st.set_page_config(
     page_title="Country Analysis",
@@ -8,13 +9,11 @@ st.set_page_config(
     layout="wide"
 )
 
+apply_global_theme()
+
 st.title("🌎 Country Analysis")
 
 df = load_data()
-
-# -----------------------------
-# Sidebar
-# -----------------------------
 
 countries = sorted(df["country_txt"].dropna().unique())
 
@@ -27,10 +26,6 @@ country_df = df[df["country_txt"] == country]
 
 st.header(f"Intelligence Report : {country}")
 
-# -----------------------------
-# KPIs
-# -----------------------------
-
 c1, c2, c3, c4 = st.columns(4)
 
 c1.metric(
@@ -40,12 +35,12 @@ c1.metric(
 
 c2.metric(
     "Fatalities",
-    int(country_df["nkill"].sum())
+    int(country_df["nkill"].fillna(0).sum())
 )
 
 c3.metric(
     "Injured",
-    int(country_df["nwound"].sum())
+    int(country_df["nwound"].fillna(0).sum())
 )
 
 c4.metric(
@@ -54,10 +49,6 @@ c4.metric(
 )
 
 st.divider()
-
-# -----------------------------
-# Attacks Over Time
-# -----------------------------
 
 left, right = st.columns(2)
 
@@ -78,10 +69,9 @@ with left:
         title="Attacks Over Years"
     )
 
-    # Valid string parameters for st.plotly_chart layout
     st.plotly_chart(
         fig,
-        width="stretch"
+        use_container_width=True
     )
 
 with right:
@@ -102,14 +92,10 @@ with right:
 
     st.plotly_chart(
         fig,
-        width="stretch"
+        use_container_width=True
     )
 
 st.divider()
-
-# -----------------------------
-# Organizations
-# -----------------------------
 
 left, right = st.columns(2)
 
@@ -134,7 +120,7 @@ with left:
 
     st.plotly_chart(
         fig,
-        width="stretch"
+        use_container_width=True
     )
 
 with right:
@@ -156,14 +142,10 @@ with right:
 
     st.plotly_chart(
         fig,
-        width="stretch"
+        use_container_width=True
     )
 
 st.divider()
-
-# -----------------------------
-# Incident Map
-# -----------------------------
 
 st.subheader("Incident Locations")
 
@@ -195,13 +177,9 @@ fig.update_layout(
     margin=dict(l=0, r=0, t=50, b=0)
 )
 
-st.plotly_chart(fig, width="stretch")
+st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
-
-# -----------------------------
-# Incident Table
-# -----------------------------
 
 st.subheader("Incident Details")
 
@@ -216,15 +194,10 @@ cols = [
     "nwound"
 ]
 
-# FIXED: Changed configuration key to native use_container_width=True for dataframe
 st.dataframe(
     country_df[cols],
     use_container_width=True
 )
-
-# -----------------------------
-# Download
-# -----------------------------
 
 csv = country_df.to_csv(
     index=False
