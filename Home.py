@@ -1,4 +1,6 @@
 import streamlit as st
+from theme_manager import apply_global_theme
+apply_global_theme()
 
 st.set_page_config(
     page_title="AI Military Intelligence Dashboard",
