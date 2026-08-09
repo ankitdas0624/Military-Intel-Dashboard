@@ -1,6 +1,4 @@
 import streamlit as st
-from theme_manager import apply_global_theme
-apply_global_theme()
 
 st.set_page_config(
     page_title="AI Military Intelligence Dashboard",
@@ -8,11 +6,7 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🛡 Military Intelligence Dashboard & Forecasting Portal")
-st.markdown(
-    "<p style='color: purple ; font-size: 1.3rem; margin-top: -15px;'> Real-time operational & threat forecasting dashboard</p>", 
-    unsafe_allow_html=True
-)
+st.title("🛡 AI-Based Military Intelligence Dashboard")
 
 st.markdown("""
 ### Welcome
@@ -36,7 +30,8 @@ Available Modules
 - 📊 Data Explorer
 - ⚙ Settings
 
-👈  Please Use the **left sidebar** to navigate.
+👈 Use the **left sidebar** to navigate.
 """)
 
 st.info("Select a page from the sidebar to begin.")
+

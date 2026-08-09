@@ -1,7 +1,13 @@
 streamlit
-plotly
 pandas
-joblib
 numpy
+plotly
 scikit-learn
-pyarrow
+joblib
+prophet
+statsmodels
+reportlab
+python-docx
+matplotlib
+folium
+streamlit-folium

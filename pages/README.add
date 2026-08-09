@@ -1,0 +1,58 @@
+Overview
+
+The AI-Based Military Intelligence Dashboard is a Streamlit web application designed to analyze and visualize military conflict and attack data using Artificial Intelligence and Machine Learning techniques.
+
+The dashboard provides interactive visualizations, predictive analytics, forecasting, and AI-powered insights to support intelligence analysis.
+Features
+🌍 Global Threat Map
+📊 Interactive Data Visualizations
+🔍 Country-wise Attack Analysis
+🤖 Attack Prediction using Machine Learning
+📈 Forecasting using Prophet
+📉 Time Series Analysis using Statsmodels
+🗺️ Interactive Maps using Folium
+📑 Report Generation (PDF & DOCX)
+📂 Data Explorer
+
+Technologies Used
+Python
+Streamlit
+Pandas
+NumPy
+Plotly
+Scikit-learn
+Prophet
+Statsmodels
+Matplotlib
+Folium
+Streamlit-Folium
+Joblib
+ReportLab
+python-docx
+Project Structure
+AI-Military-Intelligence-Dashboard/
+│── app.py
+│── pages/
+│── utils/
+│── models/
+│── data/
+│── train_attack_model.py
+│── requirements.txt
+│── README.md
+AI-Military-Intelligence-Dashboard/
+│── app.py
+│── pages/
+│── utils/
+│── models/
+│── data/
+│── train_attack_model.py
+│── requirements.txt
+│── README.mdAI-Military-Intelligence-Dashboard/
+│── app.py
+│── pages/
+│── utils/
+│── models/
+│── data/
+│── train_attack_model.py
+│── requirements.txt
+│── README.md

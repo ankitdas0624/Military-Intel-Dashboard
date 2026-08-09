@@ -4,34 +4,32 @@ import pandas as pd
 from theme_manager import apply_global_theme
 from dataloader.data_loader import load_data
 
-# Initialize model and encoders
-model = joblib.load("models/incident_prediction_model.pkl")
+model = joblib.load("models/attack_prediction_model.pkl")
 encoders = joblib.load("models/feature_encoders.pkl")
 target_encoder = joblib.load("models/target_encoder.pkl")
 
 st.set_page_config(
-    page_title="Incident Analysis",
-    page_icon="📊",
+    page_title="Attack Prediction",
+    page_icon="🤖",
     layout="wide"
 )
 
 apply_global_theme()
 
-st.title("📊 Incident Type Prediction")
+st.title("🤖 Attack Type Prediction")
 
 st.markdown("""
-Enter the incident details below and click **Predict Incident Type**.
+Enter the incident details below and click **Predict Attack Type**.
 """)
 
 df = load_data()
 
-# Clean data for dropdown selection
 df = df.dropna(subset=[
-    "location_txt",
-    "area_txt",
-    "equipment_txt",
-    "subject_txt",
-    "organization_name"
+    "country_txt",
+    "region_txt",
+    "weaptype1_txt",
+    "targtype1_txt",
+    "gname"
 ])
 
 with st.form("prediction_form"):
@@ -40,78 +38,83 @@ with st.form("prediction_form"):
 
     with col1:
 
-        location = st.selectbox(
-            "🌍 Location",
-            sorted(df["location_txt"].unique())
+        country = st.selectbox(
+            "🌍 Country",
+            sorted(df["country_txt"].unique())
         )
 
-        area = st.selectbox(
-            "🌎 Area/Region",
-            sorted(df["area_txt"].unique())
+        region = st.selectbox(
+            "🌎 Region",
+            sorted(df["region_txt"].unique())
         )
 
-        equipment = st.selectbox(
-            "🛠 Equipment Involved",
-            sorted(df["equipment_txt"].unique())
+        weapon = st.selectbox(
+            "🔫 Weapon Type",
+            sorted(df["weaptype1_txt"].unique())
         )
 
-        subject = st.selectbox(
-            "🎯 Subject Type",
-            sorted(df["subject_txt"].unique())
+        target = st.selectbox(
+            "🎯 Target Type",
+            sorted(df["targtype1_txt"].unique())
         )
 
     with col2:
 
-        organization = st.selectbox(
-            "👥 Organization",
-            sorted(df["organization_name"].unique())
+        group = st.selectbox(
+            "👥 Terrorist Group",
+            sorted(df["gname"].unique())
         )
 
-        resolved = st.selectbox(
-            "✅ Resolution Achieved?",
-            [1, 0],
+        success = st.selectbox(
+            "✅ Attack Successful?",
+            [0, 1],
             format_func=lambda x: "Yes" if x == 1 else "No"
         )
 
-        severity = st.number_input(
-            "⚠️ Severity Scale (0-10)",
-            min_value=0,
-            max_value=10,
-            value=0,
-            step=1
+        suicide = st.selectbox(
+            "💣 Suicide Attack?",
+            [0, 1],
+            format_func=lambda x: "Yes" if x == 1 else "No"
         )
 
-        impact_count = st.number_input(
-            "📈 Impact Metric",
+        nkill = st.number_input(
+            "☠ Number of Fatalities",
             min_value=0,
             value=0,
             step=1
         )
 
-    submitted = st.form_submit_button("🚀 Predict Incident Type")
+        nwound = st.number_input(
+            "🏥 Number of Injured",
+            min_value=0,
+            value=0,
+            step=1
+        )
+
+    submitted = st.form_submit_button("🚀 Predict Attack Type")
 
 if submitted:
-    # Transform inputs using encoders
-    loc_enc = encoders["location_txt"].transform([location])[0]
-    area_enc = encoders["area_txt"].transform([area])[0]
-    equip_enc = encoders["equipment_txt"].transform([equipment])[0]
-    sub_enc = encoders["subject_txt"].transform([subject])[0]
-    org_enc = encoders["organization_name"].transform([organization])[0]
+    country_enc = encoders["country_txt"].transform([country])[0]
+    region_enc = encoders["region_txt"].transform([region])[0]
+    weapon_enc = encoders["weaptype1_txt"].transform([weapon])[0]
+    target_enc = encoders["targtype1_txt"].transform([target])[0]
+    group_enc = encoders["gname"].transform([group])[0]
 
     input_df = pd.DataFrame({
-        "location_txt": [loc_enc],
-        "area_txt": [area_enc],
-        "equipment_txt": [equip_enc],
-        "subject_txt": [sub_enc],
-        "organization_name": [org_enc],
-        "resolution": [resolved],
-        "severity": [severity],
-        "impact_metric": [impact_count]
+        "country_txt": [country_enc],
+        "region_txt": [region_enc],
+        "weaptype1_txt": [weapon_enc],
+        "targtype1_txt": [target_enc],
+        "gname": [group_enc],
+        "success": [success],
+        "suicide": [suicide],
+        "nkill": [nkill],
+        "nwound": [nwound]
     })
     
     prediction = model.predict(input_df)
-    incident_type = target_encoder.inverse_transform(prediction)[0]
-    st.success(f"Predicted Incident Type: {incident_type}")
+    attack_type = target_encoder.inverse_transform(prediction)[0]
+    st.success(f"Predicted Attack Type: {attack_type}")
     
     probabilities = model.predict_proba(input_df)
     confidence = probabilities.max() * 100
@@ -120,4 +123,3 @@ if submitted:
         "Prediction Confidence",
         f"{confidence:.2f}%"
     )
-

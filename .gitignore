@@ -1,0 +1,8 @@
+my_env
+military_env/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+
