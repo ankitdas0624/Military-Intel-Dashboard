@@ -1,12 +1,9 @@
 import streamlit as st
 import joblib
 import pandas as pd
+
 from theme_manager import apply_global_theme
 from dataloader.data_loader import load_data
-
-model = joblib.load("models/attack_prediction_model.pkl")
-encoders = joblib.load("models/feature_encoders.pkl")
-target_encoder = joblib.load("models/target_encoder.pkl")
 
 st.set_page_config(
     page_title="Attack Prediction",
@@ -22,22 +19,32 @@ st.markdown("""
 Enter the incident details below and click **Predict Attack Type**.
 """)
 
+@st.cache_resource
+def load_models():
+    model = joblib.load("models/attack_prediction_model.pkl")
+    encoders = joblib.load("models/feature_encoders.pkl")
+    target_encoder = joblib.load("models/target_encoder.pkl")
+    return model, encoders, target_encoder
+
+model, encoders, target_encoder = load_models()
+
 df = load_data()
 
-df = df.dropna(subset=[
-    "country_txt",
-    "region_txt",
-    "weaptype1_txt",
-    "targtype1_txt",
-    "gname"
-])
+df = df.dropna(
+    subset=[
+        "country_txt",
+        "region_txt",
+        "weaptype1_txt",
+        "targtype1_txt",
+        "gname"
+    ]
+)
 
 with st.form("prediction_form"):
 
     col1, col2 = st.columns(2)
 
     with col1:
-
         country = st.selectbox(
             "🌍 Country",
             sorted(df["country_txt"].unique())
@@ -59,7 +66,6 @@ with st.form("prediction_form"):
         )
 
     with col2:
-
         group = st.selectbox(
             "👥 Terrorist Group",
             sorted(df["gname"].unique())
@@ -111,15 +117,18 @@ if submitted:
         "nkill": [nkill],
         "nwound": [nwound]
     })
-    
-    prediction = model.predict(input_df)
-    attack_type = target_encoder.inverse_transform(prediction)[0]
-    st.success(f"Predicted Attack Type: {attack_type}")
-    
-    probabilities = model.predict_proba(input_df)
-    confidence = probabilities.max() * 100
 
-    st.metric(
-        "Prediction Confidence",
-        f"{confidence:.2f}%"
-    )
+    prediction = model.predict(input_df)
+
+    attack_type = target_encoder.inverse_transform(prediction)[0]
+
+    st.success(f"Predicted Attack Type: {attack_type}")
+
+    if hasattr(model, "predict_proba"):
+        probabilities = model.predict_proba(input_df)
+        confidence = probabilities.max() * 100
+
+        st.metric(
+            "Prediction Confidence",
+            f"{confidence:.2f}%"
+        )
