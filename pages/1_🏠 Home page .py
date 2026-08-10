@@ -20,10 +20,25 @@ st.subheader("Dashboard Summary")
 
 c1, c2, c3, c4 = st.columns(4)
 
-c1.metric("Incidents", f"{len(df):,}")
-c2.metric("Fatalities", f"{int(df['nkill'].fillna(0).sum()):,}")
-c3.metric("Injured", f"{int(df['nwound'].fillna(0).sum()):,}")
-c4.metric("Countries", f"{df['country_txt'].nunique():,}")
+c1.metric(
+    "Incidents",
+    f"{len(df):,}"
+)
+
+c2.metric(
+    "Fatalities",
+    f"{int(df['nkill'].fillna(0).sum()):,}"
+)
+
+c3.metric(
+    "Injured",
+    f"{int(df['nwound'].fillna(0).sum()):,}"
+)
+
+c4.metric(
+    "Countries",
+    f"{df['country_txt'].nunique():,}"
+)
 
 st.divider()
 
@@ -44,15 +59,17 @@ fig = px.line(
 
 st.plotly_chart(
     fig,
-    use_container_width=True
+    width="stretch"
 )
 
 st.divider()
 
 st.success(
-    "👉 Click **Global Threat Map** from the left sidebar to explore incidents geographically."
+    "👉 Click **Global Threat Map** from the left sidebar "
+    "to explore incidents geographically."
 )
 
 st.markdown(
-    "💡 Note: You may experience a small initialization delay while loading the different layers for the first time."
+    "💡 Note: You may experience a small initialization delay "
+    "while loading the different layers for the first time."
 )
